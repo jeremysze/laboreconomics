@@ -1,9 +1,9 @@
 /****************************************************************************
 * File name: empirical_exercise1.do
-* Author(s): 
-* Date: 
+* Author(s): Sze, J.
+* Date: 2/2/2019
 * Description: 
-* 
+* Answers to empirical exercise 1 for Labor Economics
 *
 * Inputs: 
 * ..\input_data\Small CPS, 2018.dta" 
@@ -11,6 +11,7 @@
 * Outputs:
 * 
 ***************************************************************************/
+log using "..\log\empirical_exercise1", replace
 
 use "..\input_data\Small CPS, 2018.dta",clear
 
@@ -31,6 +32,11 @@ tab female grade
 tab veteran,m
 // 60 obs with missing veteran status
 
+gen white = (race == 1)
+gen black = (race == 2)
+gen indian = (race == 3)
+gen asianpi = (race == 4)
+gen other = (race == 5)
 list in 1/5
 
 tab rotation month
@@ -77,9 +83,12 @@ total weight
 // 4. Plot the Wage and log-Wage Distributions
 gen lg_wage = log(wage), after(wage)
 histogram wage, normal
+graph export "..\outputs\ee1_wage.pdf",as(pdf) replace
 // The spike at the end is caused by top coding the people who earn above a 
 // certain amount
 histogram lg_wage, normal
+graph export "..\outputs\ee1_ln_wage.pdf",as(pdf) replace
+
 graph close
 
 sum wage, detail
@@ -93,8 +102,8 @@ di "Ratio of 90-10 percentile ratio: " $p90/$p10
 di "Ratio of the difference between the wages at the 90th and 50th percentiles to the difference between the wages at the 50th and 10th percentiles: " $differences
 
 // 5. Collapse the Data to Occupation Averages
-preserve
-global list age female married veteran public union hours wage rwage
+
+global list age female married veteran public union hours wage rwage grade white black indian asianpi other
 foreach i of global list{
 gen mean_`i' = `i'
 }
@@ -106,16 +115,26 @@ collapse (mean) mean_* ///
 
 list 
 
-restore
+
 
 // 6. Analyze the Occupation Averages
+gen lg_mean_wage = log(mean_wage)
+regress lg_mean_wage mean_hours 
+predict yhat1
+regress lg_mean_wage mean_grade
+predict yhat2
+
+twoway scatter lg_mean_wage mean_hours || lfit yhat1 mean_hours
+graph export "..\outputs\ee1_scatter_hour.pdf",as(pdf) replace
+
+twoway scatter lg_mean_wage mean_grade || lfit yhat2 mean_grade
+graph export "..\outputs\ee1_scatter_grade.pdf",as(pdf) replace
+graph close
+
+regress lg_mean_wage mean_hours mean_grade
+predict yhat3
+
+regress lg_mean_wage mean_hours mean_grade mean_female mean_white mean_black mean_indian mean_asianpi
 
 
-
-forvalues i = 1/2 {
-capture drop yhat
-regress lg_wage hours grade if occupation == `i'
-predict yhat
-twoway scatter lg_wage hours if occupation == `i',sort || line yhat hours if occupation == `i',sort
-}
-
+log close
