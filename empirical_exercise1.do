@@ -108,20 +108,22 @@ foreach i of global list{
 gen mean_`i' = `i'
 }
 gen med_wage = wage
-
+gen occupation_wt = 1
 collapse (mean) mean_* ///
 (p50) med_wage ///
+(sum) occupation_wt ///
 [pweight = weight], by(occupation)
 
 list 
 
-
+svyset [pweight = occupation_wt]
+ 
 
 // 6. Analyze the Occupation Averages
 gen lg_mean_wage = log(mean_wage)
-regress lg_mean_wage mean_hours 
+svy: regress lg_mean_wage mean_hours
 predict yhat1
-regress lg_mean_wage mean_grade
+svy: regress lg_mean_wage mean_grade
 predict yhat2
 
 twoway scatter lg_mean_wage mean_hours || lfit yhat1 mean_hours
@@ -131,10 +133,10 @@ twoway scatter lg_mean_wage mean_grade || lfit yhat2 mean_grade
 graph export "..\outputs\ee1_scatter_grade.pdf",as(pdf) replace
 graph close
 
-regress lg_mean_wage mean_hours mean_grade
+svy: regress lg_mean_wage mean_hours mean_grade
 predict yhat3
 
-regress lg_mean_wage mean_hours mean_grade mean_female mean_white mean_black mean_indian mean_asianpi
+svy: regress lg_mean_wage mean_hours mean_grade mean_female mean_white mean_black mean_indian mean_asianpi
 
 
 log close
