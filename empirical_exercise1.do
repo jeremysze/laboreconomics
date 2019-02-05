@@ -100,7 +100,7 @@ global differences = ($p90 - $p50) / ($p50 - $p10)
 
 di "Ratio of 90-10 percentile ratio: " $p90/$p10
 di "Ratio of the difference between the wages at the 90th and 50th percentiles to the difference between the wages at the 50th and 10th percentiles: " $differences
-
+// This tells us how much more income above the median verse the bottom half makes.
 // 5. Collapse the Data to Occupation Averages
 
 global list age female married veteran public union hours wage rwage grade white black indian asianpi other
@@ -109,6 +109,7 @@ gen mean_`i' = `i'
 }
 gen med_wage = wage
 gen occupation_wt = 1
+
 collapse (mean) mean_* ///
 (p50) med_wage ///
 (sum) occupation_wt ///
