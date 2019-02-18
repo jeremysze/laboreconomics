@@ -11,7 +11,7 @@
 * Outputs:
 * 
 ***************************************************************************/
-*log using "..\log\empirical_exercise2", replace
+log using "..\log\empirical_exercise2", replace
 
 
 use "..\input_data\CPS Data for Minimum Wages, 1985-1996.dta",clear
@@ -20,7 +20,7 @@ use "..\input_data\CPS Data for Minimum Wages, 1985-1996.dta",clear
 
 describe
 sum
-sum [pweight = pweight]
+sum [aweight = pweight]
 
 tab state
 tab grade
@@ -60,15 +60,15 @@ regress employed_treat employed_contr min_wage_90 min_wage_91 y, robust
 
 use "..\input_data\CPS Data for Minimum Wages, 1985-1996.dta",clear
 
-gen pweight2_treat = treatment == 1
-gen pweight2_contr = treatment == 0
+gen weight2_treat = treatment == 1
+gen weight2_contr = treatment == 0
 
 gen employed_treat = employed if treatment == 1
 gen employed_contr = employed if treatment == 0
 
 
 collapse (mean) employed_treat employed_contr ///
-(sum) pweight2_treat pweight2_contr ///
+(rawsum) weight2_treat weight2_contr ///
 [pweight = pweight], by(state y)
 
 sort state y
@@ -97,4 +97,6 @@ regress employed_treat employed_contr min_wage_* i.state y y2 [pweight = weight2
 * Yes. Employment for the control group is no longer significant. 
 * The coefficients for the minimum wage event increased in magnitude.
 
-regress employed_treat employed_contr min_wage_* i.state#y [pweight = weight2_treat], robust
+regress employed_treat employed_contr min_wage_* i.state#c.y [pweight = weight2_treat], robust
+
+log close
